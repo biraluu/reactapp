@@ -25,12 +25,16 @@ jobs:
         run: npm run build
 
       - name: Deploy to CentOS server
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH key stored in GitHub Secrets
-          SERVER_IP: ${{ secrets.SSH_HOST }}              # Server IP stored in GitHub Secrets
-          USERNAME: ${{ secrets.SSH_USER }}                  # Username stored in GitHub Secrets add 2 add2 3
-        run: |
-          echo "$SSH_PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          scp -o StrictHostKeyChecking=no -i private_key -r build/* $USERNAME@$SERVER_IP:/var/www/react-app
-          ssh -o StrictHostKeyChecking=no -i $SSH_PRIVATE_KEY $USERNAME@$SERVER_IP 'sudo systemctl restart nginx'
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+        script: |
+          cd /var/www/react-app/
+          git init
+          git clone "https://github.com/biraluu/reactapp.git"
+          npm install
+          npm run build
+          sudo systemctl restart nginx
