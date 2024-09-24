@@ -1,0 +1,36 @@
+name: Deploy React App
+
+on:
+  push:
+    branches:
+      - main  # Change this if your default branch is different
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16'  # Specify the Node.js version
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app
+        run: npm run build
+
+      - name: Deploy to CentOS server
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}  # SSH key stored in GitHub Secrets
+          SERVER_IP: ${{ secrets.HOST }}              # Server IP stored in GitHub Secrets
+          USERNAME: ${{ secrets.USER }}                  # Username stored in GitHub Secrets
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+          scp -o StrictHostKeyChecking=no -i private_key -r build/* $USERNAME@$SERVER_IP:/var/www/react-app
+          ssh -o StrictHostKeyChecking=no -i private_key $USERNAME@$SERVER_IP 'sudo systemctl restart nginx'
