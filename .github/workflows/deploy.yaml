@@ -30,7 +30,7 @@ jobs:
           SERVER_IP: ${{ secrets.SSH_HOST }}              # Server IP stored in GitHub Secrets
           USERNAME: ${{ secrets.SSH_USER }}                  # Username stored in GitHub Secrets add 2 add2 3
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key
-          chmod 600 private_key
-          scp -o StrictHostKeyChecking=no -i private_key -r build/* $USERNAME@$SERVER_IP:/var/www/react-app
-          ssh -o StrictHostKeyChecking=no -i private_key $USERNAME@$SERVER_IP 'sudo systemctl restart nginx'
+          echo "$SSH_PRIVATE_KEY" 
+         # chmod 600 private_key
+         # scp -o StrictHostKeyChecking=no -i private_key -r build/* $USERNAME@$SERVER_IP:/var/www/react-app
+         # ssh -o StrictHostKeyChecking=no -i private_key $USERNAME@$SERVER_IP 'sudo systemctl restart nginx'
