@@ -8,6 +8,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -22,10 +23,6 @@ jobs:
 
     - name: Build the app
       run: npm run build
-    
-    - name: Print SSH key (for debugging only)
-      run: echo "$SSH_PRIVATE_KEY"
-    
 
     - name: Deploy to server
       env:
@@ -34,8 +31,10 @@ jobs:
         USER: root
       run: |
         eval "$(ssh-agent -s)"
-        ssh-add -l
-        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
-        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/my-app/build"
-        scp -r build $USER@$SERVER:/var/www/my-app/
-
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' > id_rsa
+        chmod 600 id_rsa
+        ssh-add id_rsa
+        ssh-add -l  # List added keys for debugging
+        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/react-app/build"
+        scp -r build $USER@$SERVER:/var/www/react-app/
+        rm id_rsa  # Clean up
