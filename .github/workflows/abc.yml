@@ -29,6 +29,8 @@ jobs:
         SERVER: 192.168.100.236
         USER: root
       run: |
-        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/react-app/build"
-        scp -r build $USER@$SERVER:/var/www/react-app/
+        eval "$(ssh-agent -s)"
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/my-app/build"
+        scp -r build $USER@$SERVER:/var/www/my-app/
+
