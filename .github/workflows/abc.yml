@@ -9,7 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
@@ -28,9 +27,9 @@ jobs:
     - name: Deploy to server
       env:
         SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-        SERVER: <your-server-ip>
-        USER: <your-username>
+        SERVER: 192.168.100.236
+        USER: root
       run: |
         echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
-        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/my-app/build"
-        scp -r build $USER@$SERVER:/var/www/my-app/
+        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/react-app/build"
+        scp -r build $USER@$SERVER:/var/www/react-app/
