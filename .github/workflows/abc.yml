@@ -22,6 +22,10 @@ jobs:
 
     - name: Build the app
       run: npm run build
+    
+    - name: Print SSH key (for debugging only)
+      run: echo "$SSH_PRIVATE_KEY"
+    
 
     - name: Deploy to server
       env:
@@ -30,6 +34,7 @@ jobs:
         USER: root
       run: |
         eval "$(ssh-agent -s)"
+        ssh-add -l
         echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
         ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/my-app/build"
         scp -r build $USER@$SERVER:/var/www/my-app/
