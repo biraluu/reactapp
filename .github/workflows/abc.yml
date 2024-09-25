@@ -37,4 +37,4 @@ jobs:
         ssh-add -l  # List added keys for debugging
         ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/react-app/build"
         scp -r build $USER@$SERVER:/var/www/react-app/
-        rm id_rsa  # Clean up
+        rm id_rsa  # C
