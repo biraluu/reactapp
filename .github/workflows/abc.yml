@@ -1,9 +1,10 @@
+# .github/workflows/deploy.yml
 name: Deploy React App
 
 on:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - master
 
 jobs:
   build:
@@ -11,31 +12,25 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v2
 
     - name: Set up Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v2
       with:
-        node-version: '18'
+        node-version: '14'
 
     - name: Install dependencies
       run: npm install
 
-    - name: Build React app
+    - name: Build the app
       run: npm run build
 
-    - name: Deploy to server via SSH
-      uses: appleboy/ssh-action@v0.1.6
-      with:
-        host: ${{ secrets.SSH_HOST }}
-        username: ${{ secrets.SSH_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: ${{ secrets.SSH_PORT }}
-        script: |
-          cd /var/www/react-app/
-          git init
-          git clone "https://github.com/biraluu/reactapp.git"
-          npm install
-          npm run build
-          sudo systemctl restart nginx           
-          
+    - name: Deploy to server
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        SERVER: <your-server-ip>
+        USER: <your-username>
+      run: |
+        echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add - > /dev/null
+        ssh -o StrictHostKeyChecking=no $USER@$SERVER "rm -rf /var/www/my-app/build"
+        scp -r build $USER@$SERVER:/var/www/my-app/
