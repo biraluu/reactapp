@@ -7,7 +7,7 @@ function App() {
       <header className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
         <p>
-          Edit <code>dont touch my code</code> and save to reload.
+          Edit <code>dont touch my code</code> and save to reload. it is with the actions runner.
         </p>
         <a
           className="App-link"
