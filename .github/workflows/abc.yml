@@ -29,8 +29,8 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 192.168.100.244 >> ~/.ssh/known_hosts
+        ssh-keyscan -H 192.168.1.78 >> ~/.ssh/known_hosts
 
     - name: SSH into VM and run commands
       run: |
-        ssh -vvv -i ~/.ssh/id_rsa biraluu@192.168.100.244 "sudo systemctl status nginx"
+        ssh -i ~/.ssh/id_rsa biraluu@192.168.1.78 "sudo systemctl status nginx"
