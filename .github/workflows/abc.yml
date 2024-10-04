@@ -26,12 +26,10 @@ jobs:
 
     - name: Setup SSH
       run: |
-        mkdir -p ~/.ssh
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H 192.168.1.78 >> ~/.ssh/known_hosts
-        sudo apt-get install sshpass
 
     - name: SSH into VM and run commands
       run: |
-        sshpass -p 'Mnias@33' biraluu@192.168.1.78 "sudo systemctl status nginx"
+        ssh -i ~/.ssh/id_rsa biraluu@192.168.1.78 "pwd"
