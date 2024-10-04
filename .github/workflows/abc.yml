@@ -29,7 +29,11 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
         ssh-keyscan -H 192.168.1.78 >> ~/.ssh/known_hosts
+    
+    - name: transferring the build files
+      run: |
+        scp -i ~/.ssh/id_rsa -r build/* biraluu@192.168.1.78:/app
 
     - name: SSH into VM and run commands
       run: |
-        ssh -i ~/.ssh/id_rsa biraluu@192.168.1.78 "sudo systemctl status nginx"
+        ssh -i ~/.ssh/id_rsa biraluu@192.168.1.78 "sudo systemctl restart nginx"
