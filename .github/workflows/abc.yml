@@ -42,5 +42,5 @@ jobs:
           cp -r $GITHUB_WORKSPACE/dev/* /home/ubuntu
           cp -r $GITHUB_WORKSPACE/dev/.[!.]* /home/ubuntu || true
           echo "Make script executable"
-          # chmod +x /home/ubuntu/run_scrapper.sh
+          chmod +x /home/ubuntu/run_scrapper.sh
 
