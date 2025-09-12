@@ -3,8 +3,8 @@ name: Deploy Code to EC2 Self-Hosted Runner
 on:
   push:
     branches:
-      - main   
-  workflow_dispatch: # Allow manual trigger from GitHub UI
+      - main
+  workflow_dispatch:
 
 jobs:
   deploy:
@@ -14,9 +14,9 @@ jobs:
       - name: Checkout code from GitHub
         uses: actions/checkout@v4
 
-      - name: Sync repo files to /home/ubuntu
+      - name: Copy repo files to /home/ubuntu
         run: |
-          rsync -av --delete \
-            --exclude='.git' \
-            --exclude='logs/' \
-            ./ /home/ubuntu/
+          echo "Copying files from $GITHUB_WORKSPACE to /home/ubuntu ..."
+          cp -r $GITHUB_WORKSPACE/* /home/ubuntu/
+          cp -r $GITHUB_WORKSPACE/.[!.]* /home/ubuntu/ || true
+
