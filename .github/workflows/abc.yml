@@ -39,8 +39,8 @@ jobs:
         run: |
           mkdir -p /home/ubuntu/test
           echo "Copying files from $GITHUB_WORKSPACE to /home/ubuntu ..."
-          cp -r $GITHUB_WORKSPACE/* /home/ubuntu
-          cp -r $GITHUB_WORKSPACE/.[!.]* /home/ubuntu || true
+          cp -r $GITHUB_WORKSPACE/dev/* /home/ubuntu
+          cp -r $GITHUB_WORKSPACE/dev/.[!.]* /home/ubuntu || true
           echo "Make script executable"
           # chmod +x /home/ubuntu/run_scrapper.sh
 
