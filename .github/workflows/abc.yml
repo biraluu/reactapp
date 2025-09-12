@@ -13,6 +13,24 @@ jobs:
     steps:
       - name: Checkout code from GitHub
         uses: actions/checkout@v4
+    
+
+      - name: create .env
+        env:
+          VAULT_ROLE_ID: ${{ secrets.VAULT_ROLE_ID }}
+          VAULT_SECRETS_ID: ${{ secrets.VAULT_SECRETS_ID }}
+          VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+        run: |
+          TOKEN=$(curl -X POST -H "Content-Type: application/json" -d "{\"role_id\": \"$VAULT_ROLE_ID\", \"secret_id\": \"$VAULT_SECRETS_ID\"}"  $VAULT_ADDR/v1/auth/approle/login | jq ".auth.client_token" | xargs echo)
+
+          BRANCH_REF=${GITHUB_REF##*/}
+          BRANCH=$([[ $BRANCH_REF == "v"* ]] && echo "main" || ([[ $BRANCH_REF == "XDKB-216" ]] && echo "dev" || echo "$BRANCH_REF"))
+
+          SECRET_PATH="xuno/data/xuno-landing/dev"
+          # Perform the request using curl
+          curl -X GET -H "X-Vault-Token: $TOKEN" "$VAULT_ADDR/v1/$SECRET_PATH" | jq ".data.data" > /tmp/env.json
+
+          jq -r 'to_entries | .[] | "\(.key)=\"\(.value)\""'  /tmp/env.json > .env
 
       - name: Copy repo files to /home/ubuntu
         run: |
