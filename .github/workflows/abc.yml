@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'dev/**'
   workflow_dispatch:
 
 jobs:
@@ -35,6 +37,9 @@ jobs:
       - name: Copy repo files to /home/ubuntu
         run: |
           echo "Copying files from $GITHUB_WORKSPACE to /home/ubuntu ..."
-          cp -r $GITHUB_WORKSPACE/* /home/ubuntu/
-          cp -r $GITHUB_WORKSPACE/.[!.]* /home/ubuntu/ || true
+          cp -r $GITHUB_WORKSPACE/* /home/ubuntu/test
+          cp -r $GITHUB_WORKSPACE/.[!.]* /home/ubuntu/test || true
+          echo "Make script executable"
+          chmod +x /home/ubuntu/test/run_scrapper.sh
+          chmod +x /home/ubuntu/test/run_scrapper.sh
 
