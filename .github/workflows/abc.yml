@@ -8,7 +8,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: self-hosted
+    runs-on: main
 
     steps:
       - name: Checkout code from GitHub
@@ -26,7 +26,7 @@ jobs:
           BRANCH_REF=${GITHUB_REF##*/}
           BRANCH=$([[ $BRANCH_REF == "v"* ]] && echo "main" || ([[ $BRANCH_REF == "XDKB-216" ]] && echo "dev" || echo "$BRANCH_REF"))
 
-          SECRET_PATH="xuno/data/xuno-landing/dev"
+          SECRET_PATH="xuno/data/x-scrappy/dev"
           # Perform the request using curl
           curl -X GET -H "X-Vault-Token: $TOKEN" "$VAULT_ADDR/v1/$SECRET_PATH" | jq ".data.data" > /tmp/env.json
 
