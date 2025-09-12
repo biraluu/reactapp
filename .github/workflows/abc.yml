@@ -1,39 +1,22 @@
-name: Deploy React App
+name: Deploy Code to EC2 Self-Hosted Runner
 
 on:
   push:
     branches:
-      - main
+      - main   
+  workflow_dispatch: # Allow manual trigger from GitHub UI
 
 jobs:
-  build:
+  deploy:
     runs-on: self-hosted
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
+      - name: Checkout code from GitHub
+        uses: actions/checkout@v4
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v2
-      with:
-        node-version: '14'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Build the app
-      run: npm run build
-
-    - name: Setup SSH
-      run: |
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-        chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H 192.168.1.78 >> ~/.ssh/known_hosts
-    
-    - name: transferring the build files
-      run: |
-        scp -i ~/.ssh/id_rsa -r build/* biraluu@192.168.1.78:/app
-
-    - name: SSH into VM and run commands
-      run: |
-        ssh -i ~/.ssh/id_rsa biraluu@192.168.1.78 "sudo systemctl restart nginx"
+      - name: Sync repo files to /home/ubuntu
+        run: |
+          rsync -av --delete \
+            --exclude='.git' \
+            --exclude='logs/' \
+            ./ /home/ubuntu/
