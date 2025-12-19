@@ -4,7 +4,7 @@ on:
   pull_request:
     branches:
       - qa
-    types: [opened, synchronize, reopened, ready_for_review]
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -13,14 +13,15 @@ permissions:
 
 jobs:
   check-version:
-    if: github.head_ref == 'dev'
+    # Only run if the PR is from dev branch to qa branch
+    if: github.head_ref == 'dev' && github.base_ref == 'qa'
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Fetch all history for all branches
 
       - name: Fetch qa branch
         run: |
