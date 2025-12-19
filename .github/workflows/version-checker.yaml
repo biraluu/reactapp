@@ -4,8 +4,8 @@ on:
   pull_request:
     branches:
       - qa
-    types: [opened, synchronize, reopened]
-    
+    types: [opened, synchronize, reopened, ready_for_review]
+
 permissions:
   contents: read
   pull-requests: write
@@ -13,14 +13,14 @@ permissions:
 
 jobs:
   check-version:
-    if: github.head_ref == 'dev' && github.base_ref == 'qa'
+    if: github.head_ref == 'dev'
     runs-on: ubuntu-latest
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0 
+          fetch-depth: 0
 
       - name: Fetch qa branch
         run: |
