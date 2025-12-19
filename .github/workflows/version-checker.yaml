@@ -4,12 +4,17 @@ on:
   pull_request:
     branches:
       - qa
-    types: [opened, synchronize, reopened]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
 
 jobs:
   check-version:
     # Only run if the PR is from dev branch to qa branch
-    if: github.head_ref == 'dev' && github.base_ref == 'qa'
+    if: github.head_ref == 'dev'
     runs-on: ubuntu-latest
     
     steps:
@@ -37,6 +42,7 @@ jobs:
           echo "QA version: $VERSION"
 
       - name: Compare versions
+        id: compare
         run: |
           DEV_VERSION="${{ steps.dev_version.outputs.version }}"
           QA_VERSION="${{ steps.qa_version.outputs.version }}"
@@ -78,3 +84,24 @@ jobs:
             echo "  - Major: increment first number (e.g., 0.1.0 -> 1.0.0)"
             exit 1
           fi
+
+      - name: Comment on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const devVersion = '${{ steps.dev_version.outputs.version }}';
+            const qaVersion = '${{ steps.qa_version.outputs.version }}';
+            const author = context.payload.pull_request?.user?.login;
+            const mention = author ? `@${author}` : 'PR author';
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `${mention} ❌ **Version check failed!**\n\n` +
+                    `**Dev version:** \`${devVersion}\`\n` +
+                    `**QA version:** \`${qaVersion}\`\n\n` +
+                    `The version in \`package.json\` must be greater than the QA branch version.\n\n` +
+                    `Please update the version to a higher version (e.g., \`${qaVersion}\` → patch: increment to next patch version, minor: increment middle number, or major: increment first number) and push the changes.`
+            });
