@@ -1,0 +1,38 @@
+name: Check Version Bump
+on:
+  pull_request:
+    branches:
+      - qa
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Get versions
+        id: versions
+        run: |
+          # Get version from current branch
+          NEW_VER=$(jq -r .version package.json)
+
+          # Get version from the target branch (qa)
+          git checkout origin/qa -- package.json
+          OLD_VER=$(jq -r .version package.json)
+          git checkout HEAD -- package.json # Restore current file
+
+          echo "old_ver=$OLD_VER" >> $GITHUB_OUTPUT
+          echo "new_ver=$NEW_VER" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        run: |
+          echo "QA Version: ${{ steps.versions.outputs.old_ver }}"
+          echo "Dev Version: ${{ steps.versions.outputs.new_ver }}"
+
+          if [ "${{ steps.versions.outputs.old_ver }}" == "${{ steps.versions.outputs.new_ver }}" ]; then
+            echo "Error: Version has not been incremented! Please update package.json."
+            exit 1
+          fi
