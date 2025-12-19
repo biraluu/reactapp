@@ -21,18 +21,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0  # Fetch all history for all branches
 
       - name: Fetch qa branch
         run: |
           git fetch origin qa:qa
-          
-      - name: Debug - Show current branch and commit
-        run: |
-          echo "Current branch: $(git branch --show-current)"
-          echo "Current commit: $(git rev-parse HEAD)"
-          echo "PR head SHA: ${{ github.event.pull_request.head.sha }}"
 
       - name: Extract dev version
         id: dev_version
