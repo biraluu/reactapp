@@ -1,0 +1,80 @@
+name: Version Check
+
+on:
+  pull_request:
+    branches:
+      - qa
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-version:
+    # Only run if the PR is from dev branch to qa branch
+    if: github.head_ref == 'dev' && github.base_ref == 'qa'
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for all branches
+
+      - name: Fetch qa branch
+        run: |
+          git fetch origin qa:qa
+
+      - name: Extract dev version
+        id: dev_version
+        run: |
+          VERSION=$(cat package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Dev version: $VERSION"
+
+      - name: Extract qa version
+        id: qa_version
+        run: |
+          VERSION=$(git show qa:package.json | grep '"version"' | head -1 | awk -F: '{ print $2 }' | sed 's/[",]//g' | tr -d '[:space:]')
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "QA version: $VERSION"
+
+      - name: Compare versions
+        run: |
+          DEV_VERSION="${{ steps.dev_version.outputs.version }}"
+          QA_VERSION="${{ steps.qa_version.outputs.version }}"
+          
+          echo "Comparing versions:"
+          echo "  Dev: $DEV_VERSION"
+          echo "  QA:  $QA_VERSION"
+          
+          # Function to compare semver versions
+          compare_versions() {
+            IFS='.' read -ra DEV_PARTS <<< "$1"
+            IFS='.' read -ra QA_PARTS <<< "$2"
+            
+            for i in 0 1 2; do
+              DEV_NUM=${DEV_PARTS[$i]:-0}
+              QA_NUM=${QA_PARTS[$i]:-0}
+              
+              if [ "$DEV_NUM" -gt "$QA_NUM" ]; then
+                return 0  # Dev version is greater
+              elif [ "$DEV_NUM" -lt "$QA_NUM" ]; then
+                return 1  # Dev version is less
+              fi
+            done
+            
+            return 1  # Versions are equal
+          }
+          
+          if compare_versions "$DEV_VERSION" "$QA_VERSION"; then
+            echo "✅ SUCCESS: Dev version ($DEV_VERSION) is greater than QA version ($QA_VERSION)"
+            echo "The PR can be merged."
+            exit 0
+          else
+            echo "❌ FAILURE: Dev version ($DEV_VERSION) must be greater than QA version ($QA_VERSION)"
+            echo ""
+            echo "Please update the version in package.json to a higher version than $QA_VERSION"
+            echo "Example: If QA is at $QA_VERSION, update to a higher version like:"
+            echo "  - Patch: increment last number (e.g., 0.1.0 -> 0.1.1)"
+            echo "  - Minor: increment middle number (e.g., 0.1.0 -> 0.2.0)"
+            echo "  - Major: increment first number (e.g., 0.1.0 -> 1.0.0)"
+            exit 1
+          fi
