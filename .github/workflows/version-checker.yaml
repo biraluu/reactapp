@@ -1,38 +1,67 @@
-name: Check Version Bump
+name: Version Check
+
 on:
   pull_request:
     branches:
       - qa
+    types: [opened, synchronize, reopened]
 
 jobs:
   check-version:
     runs-on: ubuntu-latest
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v5
+      - name: Checkout PR branch (dev)
+        uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          path: dev-branch
 
-      - name: Get versions
+      - name: Checkout target branch (qa)
+        uses: actions/checkout@v4
+        with:
+          ref: qa
+          path: qa-branch
+
+      - name: Extract versions
         id: versions
         run: |
-          # Get version from current branch
-          NEW_VER=$(jq -r .version package.json)
-
-          # Get version from the target branch (qa)
-          git checkout origin/qa -- package.json
-          OLD_VER=$(jq -r .version package.json)
-          git checkout HEAD -- package.json # Restore current file
-
-          echo "old_ver=$OLD_VER" >> $GITHUB_OUTPUT
-          echo "new_ver=$NEW_VER" >> $GITHUB_OUTPUT
+          DEV_VERSION=$(node -p "require('./dev-branch/package.json').version")
+          QA_VERSION=$(node -p "require('./qa-branch/package.json').version")
+          echo "dev_version=$DEV_VERSION" >> $GITHUB_OUTPUT
+          echo "qa_version=$QA_VERSION" >> $GITHUB_OUTPUT
+          echo "Dev version: $DEV_VERSION"
+          echo "QA version: $QA_VERSION"
 
       - name: Compare versions
         run: |
-          echo "QA Version: ${{ steps.versions.outputs.old_ver }}"
-          echo "Dev Version: ${{ steps.versions.outputs.new_ver }}"
-
-          if [ "${{ steps.versions.outputs.old_ver }}" == "${{ steps.versions.outputs.new_ver }}" ]; then
-            echo "Error: Version has not been incremented! Please update package.json."
+          DEV_VERSION="${{ steps.versions.outputs.dev_version }}"
+          QA_VERSION="${{ steps.versions.outputs.qa_version }}"
+          
+          # Function to compare semver versions
+          compare_versions() {
+            IFS='.' read -ra DEV_PARTS <<< "$1"
+            IFS='.' read -ra QA_PARTS <<< "$2"
+            
+            for i in 0 1 2; do
+              DEV_NUM=${DEV_PARTS[$i]:-0}
+              QA_NUM=${QA_PARTS[$i]:-0}
+              
+              if [ "$DEV_NUM" -gt "$QA_NUM" ]; then
+                return 0  # Dev version is greater
+              elif [ "$DEV_NUM" -lt "$QA_NUM" ]; then
+                return 1  # Dev version is less
+              fi
+            done
+            
+            return 1  # Versions are equal
+          }
+          
+          if compare_versions "$DEV_VERSION" "$QA_VERSION"; then
+            echo "✅ SUCCESS: Dev version ($DEV_VERSION) is greater than QA version ($QA_VERSION)"
+            exit 0
+          else
+            echo "❌ FAILURE: Dev version ($DEV_VERSION) must be greater than QA version ($QA_VERSION)"
+            echo "Please update the version in package.json to a higher version."
             exit 1
           fi
